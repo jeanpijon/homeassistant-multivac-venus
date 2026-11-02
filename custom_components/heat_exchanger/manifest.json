@@ -1,11 +1,13 @@
 {
   "domain": "heat_exchanger",
   "name": "MultiVac Venus Heat Exchanger (IP)",
-  "version": "0.6.2",
-  "documentation": "https://github.com/jeanpijon/homeassistant-multivac-venus",
-  "issue_tracker": "https://github.com/jeanpijon/homeassistant-multivac-venus/issues",
-  "iot_class": "local_polling",
+  "codeowners": [
+    "@jeanpijon"
+  ],
   "config_flow": true,
-  "codeowners": ["@jeanpijon"],
-  "requirements": ["pyserial>=3.5"]
+  "documentation": "https://github.com/jeanpijon/homeassistant-multivac-venus",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/jeanpijon/homeassistant-multivac-venus/issues",
+  "requirements": [],
+  "version": "0.6.2"
 }
