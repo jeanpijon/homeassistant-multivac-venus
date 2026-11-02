@@ -1,0 +1,16 @@
+{
+  "title": "MultiVac Venus Heat Exchanger",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Venus unit",
+        "description": "Enter the IP and port of your IP→RS485 bridge.",
+        "data": {
+          "name": "Name",
+          "host": "Host",
+          "port": "Port"
+        }
+      }
+    }
+  }
+}

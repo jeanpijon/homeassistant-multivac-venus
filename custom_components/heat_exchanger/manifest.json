@@ -1,0 +1,11 @@
+{
+  "domain": "heat_exchanger",
+  "name": "MultiVac Venus Heat Exchanger (IP)",
+  "version": "0.6.2",
+  "documentation": "https://example.local/heat_exchanger",
+  "issue_tracker": "https://example.local/heat_exchanger/issues",
+  "iot_class": "local_polling",
+  "config_flow": true,
+  "codeowners": ["@you"],
+  "requirements": ["pyserial>=3.5"]
+}

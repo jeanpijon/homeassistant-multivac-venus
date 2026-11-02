@@ -1,0 +1,16 @@
+{
+  "title": "Výměník vzduchu MultiVac Venus",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Připojení k jednotce Venus",
+        "description": "Zadejte IP adresu a port IP→RS485 převodníku.",
+        "data": {
+          "name": "Název",
+          "host": "Host",
+          "port": "Port"
+        }
+      }
+    }
+  }
+}

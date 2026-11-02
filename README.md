@@ -1,0 +1,1 @@
+# MultiVac Venus Heat Exchanger (IP)\nVendor-specific HA climate integration for MultiVac Venus.
