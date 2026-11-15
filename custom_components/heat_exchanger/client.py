@@ -17,6 +17,27 @@ COMMANDS: Dict[str, List[int]] = {
     "auto_3": [ord(c) for c in "ÿÿÿ1511011121pu)08020300005B74\r"],
 }
 
+def parse_sensor_frame(resp: bytes) -> Optional[Dict[str, int]]:
+    """Decode a status reply into the sensors dict; None if it is not a valid frame."""
+    if len(resp) < 40:
+        return None
+    try:
+        s = resp[19:-1].decode("utf-8")
+        data = [int(s[i:i+2], 16) for i in range(0, len(s), 2)]
+    except Exception:
+        return None
+    if len(data) < 23:
+        return None
+    return {
+        "power_factor.fan_ingress": data[1],
+        "power_factor.fan_egress": data[2],
+        "temperature.out_ingress": data[19],
+        "temperature.out_egress": data[20],
+        "temperature.in_egress": data[21],
+        "temperature.in_ingress": data[22],
+    }
+
+
 class RS485IPClient:
     def __init__(self, host: str, port: int, poll_seconds: float) -> None:
         self._url = f"socket://{host}:{port}"
@@ -27,6 +48,7 @@ class RS485IPClient:
         self._stop = threading.Event()
         self._thread: Optional[threading.Thread] = None
         self._latest_sensors: Dict = {"sensors": {}}
+        self._last_frame: Optional[float] = None
         self._ser: Optional[serial.SerialBase] = None
 
     def start(self) -> None:
@@ -61,7 +83,8 @@ class RS485IPClient:
 
     def snapshot(self) -> Dict:
         ha_mode = "off" if self._mode == "idle" else self._mode
-        return {"state": {"mode": ha_mode, "fan": self._fan_level}, **self._latest_sensors}
+        age = None if self._last_frame is None else time.monotonic() - self._last_frame
+        return {"state": {"mode": ha_mode, "fan": self._fan_level}, "frame_age": age, **self._latest_sensors}
 
     def _ensure(self) -> None:
         if self._ser and self._ser.is_open:
@@ -96,21 +119,10 @@ class RS485IPClient:
                 level = self._fan_level
             self._write(mode, level)
             resp = self._ser.read(74)
-            if len(resp) >= 40:
-                try:
-                    s = resp[19:-1].decode("utf-8")
-                    data = [int(s[i:i+2], 16) for i in range(0, len(s), 2)]
-                except Exception:
-                    data = []
-                if len(data) >= 23:
-                    self._latest_sensors = {"sensors": {
-                        "power_factor.fan_ingress": data[1],
-                        "power_factor.fan_egress": data[2],
-                        "temperature.out_ingress": data[19],
-                        "temperature.out_egress": data[20],
-                        "temperature.in_egress": data[21],
-                        "temperature.in_ingress": data[22],
-                    }}
+            sensors = parse_sensor_frame(resp)
+            if sensors is not None:
+                self._latest_sensors = {"sensors": sensors}
+                self._last_frame = time.monotonic()
             time.sleep(self._poll_seconds)
         self._write("idle", 0)
 

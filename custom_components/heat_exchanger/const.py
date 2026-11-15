@@ -1,6 +1,8 @@
 DOMAIN = "heat_exchanger"
 PLATFORMS = ["climate", "sensor"]
 DEFAULT_POLL_SECONDS = 1.0
+# no valid status frame for this long: the unit or the gateway is not answering
+STALE_AFTER_SECONDS = 15.0
 
 CONF_HOST = "host"
 CONF_PORT = "port"

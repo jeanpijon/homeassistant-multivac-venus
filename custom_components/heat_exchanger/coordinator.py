@@ -3,8 +3,8 @@ import asyncio, contextlib, logging
 from typing import Any
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from .const import DOMAIN, DEFAULT_POLL_SECONDS, CONF_HOST, CONF_PORT
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from .const import DOMAIN, DEFAULT_POLL_SECONDS, STALE_AFTER_SECONDS, CONF_HOST, CONF_PORT
 from .client import RS485IPClient
 
 _LOGGER = logging.getLogger(__name__)
@@ -14,7 +14,7 @@ async def _async_options_updated(hass: HomeAssistant, entry: ConfigEntry):
 
 class HeatExchangerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=None)
+        super().__init__(hass, _LOGGER, config_entry=entry, name=DOMAIN, update_interval=None)
         self.entry = entry
         self._client: RS485IPClient | None = None
         self._task: asyncio.Task | None = None
@@ -32,10 +32,21 @@ class HeatExchangerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             while True:
                 await asyncio.sleep(1)
-                if self._client:
-                    self.async_set_updated_data(self._client.snapshot())
+                self._publish()
         except asyncio.CancelledError:
             pass
+
+    def _publish(self) -> None:
+        """Push the client's snapshot, or mark entities unavailable if the unit went silent."""
+        if not self._client:
+            return
+        snap = self._client.snapshot()
+        age = snap.get("frame_age")
+        if age is None or age > STALE_AFTER_SECONDS:
+            detail = "no valid frame yet" if age is None else f"no valid frame for {age:.0f} s"
+            self.async_set_update_error(UpdateFailed(f"Venus not answering: {detail}"))
+        else:
+            self.async_set_updated_data(snap)
 
     async def async_shutdown(self) -> None:
         if self._task:
