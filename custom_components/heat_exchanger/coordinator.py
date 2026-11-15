@@ -24,6 +24,7 @@ class HeatExchangerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._client = RS485IPClient(host=cfg[CONF_HOST], port=int(cfg[CONF_PORT]), poll_seconds=DEFAULT_POLL_SECONDS)
         await self.hass.async_add_executor_job(self._client.start)
         self._task = self.hass.loop.create_task(self._pump())
+        self._publish()  # entities start out unavailable until the unit answers, not 'unknown'/'off'
         if not hasattr(self.entry, "_hx_listener_added"):
             self.entry.add_update_listener(_async_options_updated)
             setattr(self.entry, "_hx_listener_added", True)
