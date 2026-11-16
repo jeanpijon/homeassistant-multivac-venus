@@ -84,3 +84,18 @@ def test_idle_resets_fan_and_reports_off(client):
 
 def test_snapshot_has_no_frame_age_before_first_frame(client):
     assert client.snapshot()["frame_age"] is None
+
+
+def test_climate_declares_its_unit_the_way_this_home_assistant_expects():
+    # _attr_temperature_unit is deprecated from Home Assistant 2026.11 (removed in 2027.11);
+    # older releases only know it. The entity picks whichever the base class supports.
+    from homeassistant.components.climate import ClimateEntity
+
+    from custom_components.heat_exchanger.climate import HXClimate
+
+    declared = vars(HXClimate)  # Home Assistant wraps _attr_* in cached properties, so check names
+    if hasattr(ClimateEntity, "native_temperature_unit"):
+        assert "_attr_native_temperature_unit" in declared
+        assert "_attr_temperature_unit" not in declared
+    else:
+        assert "_attr_temperature_unit" in declared

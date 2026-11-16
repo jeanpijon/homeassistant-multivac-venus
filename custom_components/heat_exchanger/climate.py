@@ -18,7 +18,11 @@ class HXClimate(CoordinatorEntity[HeatExchangerCoordinator], ClimateEntity):
     _attr_supported_features = ClimateEntityFeature.FAN_MODE
     _attr_hvac_modes = HVAC_LIST
     _attr_fan_modes = list(FAN_LEVELS)  # now includes "0"
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    # Home Assistant 2026.11 renamed the climate unit attribute; older releases only know the old one.
+    if hasattr(ClimateEntity, "native_temperature_unit"):
+        _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    else:
+        _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, coordinator: HeatExchangerCoordinator) -> None:
         super().__init__(coordinator)
